@@ -1,0 +1,21 @@
+id, image, label, label1
+ 1, 01_test.png, 01_manual1.png, 01_manual2.png
+ 2, 02_test.png, 02_manual1.png, 02_manual2.png
+ 3, 03_test.png, 03_manual1.png, 03_manual2.png
+ 4, 04_test.png, 04_manual1.png, 04_manual2.png
+ 5, 05_test.png, 05_manual1.png, 05_manual2.png
+ 6, 06_test.png, 06_manual1.png, 06_manual2.png
+ 7, 07_test.png, 07_manual1.png, 07_manual2.png
+ 8, 08_test.png, 08_manual1.png, 08_manual2.png
+ 9, 09_test.png, 09_manual1.png, 09_manual2.png
+10, 10_test.png, 10_manual1.png, 10_manual2.png
+11, 11_test.png, 11_manual1.png, 11_manual2.png
+12, 12_test.png, 12_manual1.png, 12_manual2.png
+13, 13_test.png, 13_manual1.png, 13_manual2.png
+14, 14_test.png, 14_manual1.png, 14_manual2.png
+15, 15_test.png, 15_manual1.png, 15_manual2.png
+16, 16_test.png, 16_manual1.png, 16_manual2.png
+17, 17_test.png, 17_manual1.png, 17_manual2.png
+18, 18_test.png, 18_manual1.png, 18_manual2.png
+19, 19_test.png, 19_manual1.png, 19_manual2.png
+20, 20_test.png, 20_manual1.png, 20_manual2.png
