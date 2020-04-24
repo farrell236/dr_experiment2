@@ -15,7 +15,7 @@ class DataGenerator(keras.utils.Sequence):
 
         'Initialization'
         self.list_IDs = csv_file['image'].values
-        self.list_labels = csv_file['label_onehot'].values
+        self.list_labels = csv_file['label'].values
         self.data_root = data_root
         self.batch_size = batch_size
         self.resize = resize
@@ -80,8 +80,11 @@ class DataGenerator(keras.utils.Sequence):
 
 if __name__ == '__main__':
 
-    train_csv = 'data/IDRID/train_list.csv'
-    data_root = 'data/IDRID/IDRID_train'
+    # train_csv = 'data/IDRID/train_list.csv'
+    # data_root = 'data/IDRID/IDRID_train'
+
+    train_csv = 'data/DRIVE/train_list.csv'
+    data_root = 'data/DRIVE/DRIVE_train'
 
     data_transforms = {
         'image': keras.preprocessing.image.ImageDataGenerator(
@@ -99,13 +102,13 @@ if __name__ == '__main__':
         ),
     }
 
-    dataloader = DataGenerator(train_csv, data_root, transform=data_transforms)
+    dataloader = DataGenerator(train_csv, data_root, resize=1024, transform=None)
 
-    batch = dataloader.__getitem__(8)
+    batch = dataloader.__getitem__(1)
 
     for i in range(6):
         cv2.imwrite('imgdump/image{}.png'.format(i), batch[0][i])
-        cv2.imwrite('imgdump/label{}.png'.format(i), batch[1][i]/7*255)
+        cv2.imwrite('imgdump/label{}.png'.format(i), batch[1][i]*255)
 
     for i in range(6):
         print(i, batch[0][i,0,0,0])

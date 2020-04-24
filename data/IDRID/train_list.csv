@@ -1,4 +1,4 @@
-id,image,label_onehot,label_rgb
+id,image,label,label_rgb
 1,images/IDRiD_01.png,masks/onehot/IDRiD_01.png,masks/rgb/IDRiD_01.png
 2,images/IDRiD_02.png,masks/onehot/IDRiD_02.png,masks/rgb/IDRiD_02.png
 3,images/IDRiD_03.png,masks/onehot/IDRiD_03.png,masks/rgb/IDRiD_03.png

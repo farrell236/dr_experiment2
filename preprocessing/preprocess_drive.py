@@ -70,6 +70,7 @@ for i in tqdm.tqdm(images):
         mask = mask[y:y + h, x:x + w]
         mask = _border_pad(mask)
         mask = cv2.resize(mask, (res, res), interpolation=cv2.INTER_NEAREST)
+        mask = np.uint8(mask > 0)
         cv2.imwrite(out_folder + '/{:02d}_manual1.png'.format(i), mask)
 
 
