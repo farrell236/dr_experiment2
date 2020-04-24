@@ -49,7 +49,7 @@ for i in tqdm.tqdm(images):
     image = cv2.imread(img_root + '/{:02d}_{}.tif'.format(i,f))
 
     # Get retina bounding box
-    x, y, w, h = _get_retina_bb(image)
+    x, y, w, h, _ = _get_retina_bb(image)
 
     # Crop image to bbox
     image = image[y:y+h,x:x+w]

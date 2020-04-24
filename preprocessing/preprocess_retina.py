@@ -52,7 +52,11 @@ def _get_retina_bb(image_in):
     # Get bounding box from mask contour
     x,y,w,h = cv2.boundingRect(c)
 
-    return x, y, w, h
+    # Get mask from contour
+    mask = np.zeros_like(image)
+    cv2.drawContours(mask, [c], -1, (255, 255, 255), -1)
+
+    return x, y, w, h, mask
 
 
 if __name__ == '__main__':
@@ -91,7 +95,7 @@ if __name__ == '__main__':
         image = cv2.imread(images[i])
     
         # Get retina bounding box
-        x, y, w, h = _get_retina_bb(image)
+        x, y, w, h, _ = _get_retina_bb(image)
     
         # Crop image to bbox
         image = image[y:y+h,x:x+w]

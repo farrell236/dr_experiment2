@@ -18,7 +18,7 @@ def autodir(path):
 ################################################################################
 
 dataset = 'TEST'
-data_root = 'IDRID/A. Segmentation'
+data_root = '/vol/vipdata/data/retina/IDRID/A. Segmentation'
 res = 1024
 normalize = 0
 clip = 0
@@ -52,6 +52,7 @@ autodir(out_folder + '/masks/rgb')
 mask_shape = (2848, 4288)  # default size for all IDRID images
 
 colour_class = {
+    'retina': (255, 255, 255),
     'MA': (242, 80, 34),
     'HE': (127, 186, 0),
     'EX': (0, 164, 239),
@@ -60,6 +61,8 @@ colour_class = {
     'BG': (0, 0, 0),
 }
 
+_retina = np.zeros((2848, 4288, 3)).astype('uint8')
+_retina[:] = colour_class['retina']
 _BG = np.zeros((2848, 4288, 3)).astype('uint8')
 _BG[:] = colour_class['BG']
 _OD = np.zeros((2848, 4288, 3)).astype('uint8')
@@ -87,7 +90,8 @@ for i in tqdm.tqdm(idx):
     image = cv2.imread(img_root + '/IDRiD_{:02d}.jpg'.format(i))
 
     # Get retina bounding box
-    x, y, w, h = _get_retina_bb(image)
+    x, y, w, h, retina = _get_retina_bb(image)
+    retina = np.uint8(retina > 0)
 
     # Crop image to bbox
     image = image[y:y + h, x:x + w]
@@ -148,14 +152,16 @@ for i in tqdm.tqdm(idx):
     ###########################################################################
 
     # Pixel Priority:
-    # EX -> HE -> SE -> MA -> OD
+    # EX -> HE -> SE -> MA -> OD -> retina
     EX_HE = np.uint8((EX + HE) > 0)  # cumulative mask (EX + HE)
     EX_HE_SE = np.uint8((EX + HE + SE) > 0)  # cumulative mask (EX + HE + SE)
     EX_HE_SE_MA = np.uint8((EX + HE + SE + MA) > 0)  # cumulative mask (EX + HE + SE + MA)
     EX_HE_SE_MA_OD = np.uint8((EX + HE + SE + MA + OD) > 0)  # cumulative mask (EX + HE + SE + MA + OD)
-    BG = 1 - EX_HE_SE_MA_OD
+    EX_HE_SE_MA_OD_retina = np.uint8((EX + HE + SE + MA + OD + retina) > 0)
+    BG = 1 - EX_HE_SE_MA_OD_retina
 
     # BG = BG #* 255
+    retina = retina * (1 - EX_HE_SE_MA_OD)  # *255
     OD = OD * (1 - EX_HE_SE_MA)  # * 255
     MA = MA * (1 - EX_HE_SE)  # * 255
     SE = SE * (1 - EX_HE)  # * 255
@@ -170,7 +176,7 @@ for i in tqdm.tqdm(idx):
     ## Make mask for one-hot
     ###########################################################################
 
-    one_hot = np.stack((BG, EX, HE, SE, MA, OD), axis=-1)
+    one_hot = np.stack((BG, EX, HE, SE, MA, OD, retina), axis=-1)
     one_hot_vec = np.argmax(one_hot, axis=-1)
     one_hot_vec = one_hot_vec[y:y + h, x:x + w]
     one_hot_vec = np.expand_dims(one_hot_vec, axis=-1)
@@ -183,6 +189,7 @@ for i in tqdm.tqdm(idx):
     ## Make mask for RGB
     ###########################################################################
 
+    retina = cv2.bitwise_and(_retina, _retina, mask=retina)
     BG = cv2.bitwise_and(_BG, _BG, mask=BG)
     OD = cv2.bitwise_and(_OD, _OD, mask=OD)
     MA = cv2.bitwise_and(_MA, _MA, mask=MA)
@@ -190,7 +197,7 @@ for i in tqdm.tqdm(idx):
     HE = cv2.bitwise_and(_HE, _HE, mask=HE)
     EX = cv2.bitwise_and(_EX, _EX, mask=EX)
 
-    mask = EX + HE + SE + MA + OD + BG
+    mask = EX + HE + SE + MA + OD + BG + retina
     mask = mask[y:y + h, x:x + w]
     mask = _border_pad(mask)
     mask = cv2.resize(mask, (res, res), interpolation=cv2.INTER_NEAREST)
