@@ -1,0 +1,3 @@
+[submodule "SPADE-Tensorflow"]
+	path = SPADE-Tensorflow
+	url = https://github.com/taki0112/SPADE-Tensorflow.git
