@@ -14,8 +14,8 @@ class DataGenerator(keras.utils.Sequence):
         csv_file = pd.read_csv(csv)
 
         'Initialization'
-        self.list_IDs = csv_file['image'].values
-        self.list_labels = csv_file['label'].values
+        self.list_IDs = csv_file['name'].values
+        self.list_labels = csv_file['level'].values
         self.data_root = data_root
         self.batch_size = batch_size
         self.resize = resize
@@ -48,7 +48,7 @@ class DataGenerator(keras.utils.Sequence):
         'Generates data containing batch_size samples'
         # Initialization
         X = np.empty((self.batch_size, self.resize, self.resize, self.n_channels))
-        y = np.empty((self.batch_size, self.resize, self.resize, 1), dtype=np.uint8)
+        y = np.empty((self.batch_size, 1), dtype=np.uint8)
 
         # Generate data
         for i, idx in enumerate(indexes):
@@ -58,21 +58,18 @@ class DataGenerator(keras.utils.Sequence):
             seed = np.random.get_state()[1][0]
 
             # Load sample
-            image = cv2.imread(os.path.join(self.data_root, self.list_IDs[idx]))
-            label = cv2.imread(os.path.join(self.data_root, self.list_labels[idx]))
+            image = cv2.imread(os.path.join(self.data_root, self.list_IDs[idx])+'.jpeg')
 
             # Resize Images
             image = cv2.resize(image, (self.resize, self.resize), interpolation=cv2.INTER_LINEAR)
-            label = cv2.resize(label, (self.resize, self.resize), interpolation=cv2.INTER_NEAREST)
 
             # Data augmentation and transformation
             if self.transform:
                 image = self.transform['image'].random_transform(image, seed=seed)
-                label = self.transform['label'].random_transform(label, seed=seed)
 
             # Store sample
             X[i, ...] = image
-            y[i, :, :, 0] = label[..., 0]
+            y[i, 0] = self.list_labels[idx]
 
         return X, y
 
@@ -80,11 +77,15 @@ class DataGenerator(keras.utils.Sequence):
 
 if __name__ == '__main__':
 
-    # train_csv = 'data/IDRID/train_list.csv'
-    # data_root = 'data/IDRID/IDRID_train'
+    train_csv = 'data/EyePACS/train_all_df.csv'
+    train_root = 'preprocessing/train_C0_R1024x1024'
+    test_csv = 'data/EyePACS/test_public_df.csv'
+    test_root = 'preprocessing/test_C0_R1024x1024'
 
-    train_csv = 'data/DRIVE/train_list.csv'
-    data_root = 'data/DRIVE/DRIVE_train'
+    res = 512
+
+    train_generator = DataGenerator(train_csv, train_root, batch_size=8, resize=res, transform=None)
+    valid_generator = DataGenerator(test_csv, test_root, batch_size=4, resize=res, transform=None, shuffle=False)
 
     data_transforms = {
         'image': keras.preprocessing.image.ImageDataGenerator(
@@ -102,16 +103,15 @@ if __name__ == '__main__':
         ),
     }
 
-    dataloader = DataGenerator(train_csv, data_root, resize=1024, transform=None)
+    dataloader = DataGenerator(train_csv, train_root, resize=1024, transform=None)
 
     batch = dataloader.__getitem__(1)
 
     for i in range(6):
         cv2.imwrite('imgdump/image{}.png'.format(i), batch[0][i])
-        cv2.imwrite('imgdump/label{}.png'.format(i), batch[1][i]*255)
 
     for i in range(6):
-        print(i, batch[0][i,0,0,0])
+        print(i, batch[1][i])
 
     a=1
 
