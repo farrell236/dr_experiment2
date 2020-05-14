@@ -1,5 +1,7 @@
 import os
 import cv2
+import tqdm
+
 import numpy as np
 import tensorflow as tf
 
@@ -10,15 +12,15 @@ from networks.UNet2D_v2 import unet
 from networks.UNet2D import R2AttU_Net
 from networks.BCDU_Net import BCDU_net_D3
 
-train_csv = 'data/IDRID/train_list.csv'
-train_root = 'data/IDRID/IDRID_train'
-test_csv = 'data/IDRID/test_list.csv'
-test_root = 'data/IDRID/IDRID_test'
+# train_csv = 'data/IDRID/train_list.csv'
+# train_root = 'data/IDRID/IDRID_train'
+# test_csv = 'data/IDRID/test_list.csv'
+# test_root = 'data/IDRID/IDRID_test'
 
-# train_csv = 'data/DRIVE/train_list.csv'
-# train_root = 'data/DRIVE/DRIVE_train'
-# test_csv = 'data/DRIVE/test_list.csv'
-# test_root = 'data/DRIVE/DRIVE_test'
+train_csv = 'data/DRIVE/train_list.csv'
+train_root = 'data/DRIVE/DRIVE_train'
+test_csv = 'data/DRIVE/test_list.csv'
+test_root = 'data/DRIVE/DRIVE_test'
 
 
 data_transforms = {
@@ -37,13 +39,13 @@ data_transforms = {
     ),
 }
 
-train_generator = DataGenerator(train_csv, train_root, batch_size=18, rnd_crop=128, transform=data_transforms)
+train_generator = DataGenerator(train_csv, train_root, batch_size=5, rnd_crop=256, transform=data_transforms)
 valid_generator = DataGenerator(test_csv, test_root, batch_size=1, transform=None, shuffle=False)
 
 
 # Standard unet
 inputs = keras.layers.Input(shape=(None, None, 3))
-outputs = unet(inputs=inputs, output_ch=7)
+outputs = unet(inputs=inputs, output_ch=1, activation='sigmoid')
 unet_model = keras.models.Model(inputs=inputs, outputs=outputs)
 unet_model.summary()
 
@@ -58,14 +60,14 @@ unet_model.summary()
 
 
 unet_model.compile(optimizer=keras.optimizers.Adam(lr=1e-4),
-                   loss='sparse_categorical_crossentropy',
-                   metrics=['sparse_categorical_accuracy'])
+                   loss='binary_crossentropy',
+                   metrics=['binary_accuracy'])
 
 a=1
 
 # callbacks
 
-model_path = 'models/idrid_segmentation/'
+model_path = 'models/drive_segmentation_2/'
 if not os.path.exists(model_path):
     os.makedirs(model_path)
 
@@ -99,10 +101,10 @@ callbacks_list = [history, csv_logger, checkpoint]
 a=1
 
 unet_model.fit_generator(train_generator,
-                         validation_data=valid_generator,
+                         # validation_data=valid_generator,
                          steps_per_epoch=len(train_generator),
-                         validation_steps=len(valid_generator),
-                         use_multiprocessing=True, workers=8,
+                         # validation_steps=len(valid_generator),
+                         # use_multiprocessing=True, workers=8,
                          epochs=1000,
                          callbacks=callbacks_list)
 
@@ -115,21 +117,19 @@ a=1
 y_pred = []
 y_true = []
 
-# for i in range(len(valid_generator)):
-for i in range(2):
+for i in tqdm.tqdm(range(len(valid_generator))):
     X, y = valid_generator.__getitem__(i)
     y_pred.append(unet_model.predict(X))
     y_true.append(y)
-    print(i)
 
 y_pred = np.concatenate(y_pred, axis=0)
 y_true = np.concatenate(y_true, axis=0)
 
-# y_pred = np.uint8(y_pred > 0.1)
-y_pred = np.argmax(y_pred, axis=-1)
+y_pred = np.uint8(y_pred > 0.5)
+# y_pred = np.argmax(y_pred, axis=-1)
 
-for i in range(y_pred.shape[0]):
-    cv2.imwrite('imgdump/{}_pred.png'.format(i), y_pred[i, ...]/6*255)
-    cv2.imwrite('imgdump/{}_true.png'.format(i), y_true[i, ...]/6*255)
+for i in tqdm.tqdm(range(y_pred.shape[0])):
+    cv2.imwrite('imgdump/{}_pred.png'.format(i), y_pred[i, ...]*255)
+    cv2.imwrite('imgdump/{}_true.png'.format(i), y_true[i, ...]*255)
 
 a=1
